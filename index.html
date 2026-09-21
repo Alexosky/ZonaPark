@@ -1,0 +1,861 @@
+<title>ZonaPark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+
+<style>
+  :root{
+    --ink:#171B24;
+    --navy:#1F2430;
+    --slate:#3A4358;
+    --muted:#666F80;
+    --amber:#E2900F;
+    --amber-bright:#F5A623;
+    --paper:#F4F5F7;
+    --surface:#FFFFFF;
+    --line:#DDE1E8;
+    --line-soft:#E9ECF1;
+    --ok:#2E7D5B;
+
+    --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+
+    --wrap:1120px;
+    --gutter:clamp(18px,4vw,40px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#EEF1F5; --navy:#E6EAF1; --slate:#B6BECD; --muted:#8B94A5;
+      --amber:#F5A623; --amber-bright:#FFB93A;
+      --paper:#12151C; --surface:#191D26; --line:#2B313D; --line-soft:#232935;
+      --ok:#4BB98A;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#EEF1F5; --navy:#E6EAF1; --slate:#B6BECD; --muted:#8B94A5;
+    --amber:#F5A623; --amber-bright:#FFB93A;
+    --paper:#12151C; --surface:#191D26; --line:#2B313D; --line-soft:#232935;
+    --ok:#4BB98A;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--slate);
+    font-family:var(--sans); font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:var(--serif); color:var(--ink); margin:0; text-wrap:balance; line-height:1.18}
+  h1{font-size:clamp(2.4rem,6vw,4.1rem); font-weight:700; letter-spacing:-.02em}
+  h2{font-size:clamp(1.65rem,3.4vw,2.4rem); font-weight:600; letter-spacing:-.015em}
+  h3{font-size:1.06rem; font-weight:600}
+  p{margin:0}
+  a{color:inherit}
+  img{max-width:100%; display:block}
+  ::selection{background:var(--amber-bright); color:#1F2430}
+
+  .wrap{max-width:var(--wrap); margin-inline:auto; padding-inline:var(--gutter)}
+  .sec{padding-block:clamp(56px,8vw,104px)}
+  .eyebrow{
+    font-family:var(--mono); font-size:.72rem; font-weight:600;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--amber);
+  }
+  .lede{font-size:clamp(1.02rem,1.6vw,1.2rem); color:var(--slate); max-width:62ch}
+  code,.code{font-family:var(--mono); font-size:.86em; letter-spacing:-.01em}
+
+  /* ---------- 1 · encabezado ---------- */
+  .topbar{
+    position:sticky; top:env(safe-area-inset-top,0px); z-index:40;
+    background:color-mix(in srgb,var(--paper) 88%,transparent);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line-soft);
+  }
+  .topbar-in{display:flex; align-items:center; gap:14px; height:62px}
+  .brand{display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:600; color:var(--ink)}
+  .brand svg{flex:none}
+  .brand b{font-family:var(--serif); font-size:1.18rem; font-weight:700; letter-spacing:-.01em}
+  .navlinks{display:flex; gap:22px; margin-left:auto; font-size:.9rem}
+  .navlinks a{text-decoration:none; color:var(--muted)}
+  .navlinks a:hover{color:var(--ink)}
+  @media (max-width:760px){ .navlinks{display:none} }
+
+  .hero{padding-block:clamp(48px,8vw,92px) clamp(44px,6vw,72px)}
+  .hero-grid{display:grid; grid-template-columns:1.15fr .85fr; gap:clamp(28px,5vw,64px); align-items:center}
+  @media (max-width:860px){ .hero-grid{grid-template-columns:1fr; gap:34px} }
+  .hero h1{margin-block:14px 18px}
+  .hero h1 .hl{color:var(--amber)}
+  .cta-row{display:flex; flex-wrap:wrap; gap:12px; margin-top:26px}
+  .btn{
+    display:inline-flex; align-items:center; gap:9px; border-radius:7px;
+    padding:12px 20px; font-size:.93rem; font-weight:600; font-family:var(--sans);
+    text-decoration:none; border:1px solid transparent; cursor:pointer; transition:.16s ease;
+  }
+  .btn-primary{background:var(--ink); color:var(--paper)}
+  .btn-primary:hover{background:var(--slate)}
+  .btn-ghost{border-color:var(--line); color:var(--ink); background:var(--surface)}
+  .btn-ghost:hover{border-color:var(--ink)}
+  .btn:focus-visible,a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{
+    outline:2px solid var(--amber); outline-offset:3px;
+  }
+
+  /* panel de estado del parqueadero — el objeto más característico del sistema */
+  .panel{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:20px; box-shadow:0 14px 34px -26px rgba(23,27,36,.5);
+  }
+  .panel-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px}
+  .panel-head .t{font-family:var(--mono); font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+  .panel-head .n{font-family:var(--serif); font-size:1.5rem; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums}
+  .lot{display:grid; grid-template-columns:repeat(8,1fr); gap:5px; margin:16px 0 14px}
+  .cell{aspect-ratio:1/1.35; border-radius:3px; background:var(--line-soft); border:1px solid var(--line)}
+  .cell.busy{background:var(--ink); border-color:var(--ink)}
+  .cell.now{background:var(--amber-bright); border-color:var(--amber)}
+  .panel-rows{border-top:1px solid var(--line-soft); padding-top:12px; display:grid; gap:8px}
+  .prow{display:flex; align-items:center; gap:10px; font-size:.82rem; font-variant-numeric:tabular-nums}
+  .plate{font-family:var(--mono); font-weight:600; color:var(--ink); letter-spacing:.02em}
+  .prow .sp{margin-left:auto; color:var(--muted)}
+  .prow .amt{font-family:var(--mono); font-weight:600; color:var(--ink)}
+  .legend{display:flex; gap:16px; margin-top:12px; font-size:.75rem; color:var(--muted)}
+  .legend i{width:9px; height:9px; border-radius:2px; display:inline-block; margin-right:5px; vertical-align:1px}
+
+  /* ---------- 2 · propuesta de valor ---------- */
+  .band{background:var(--surface); border-block:1px solid var(--line-soft)}
+  .vp-grid{display:grid; grid-template-columns:.9fr 1.1fr; gap:clamp(24px,5vw,64px); align-items:start}
+  @media (max-width:860px){ .vp-grid{grid-template-columns:1fr; gap:26px} }
+  .vp-body{display:grid; gap:18px}
+  .flow{display:grid; gap:0; margin-top:8px}
+  .step{display:grid; grid-template-columns:auto 1fr; gap:16px; padding-block:14px; border-top:1px solid var(--line-soft)}
+  .step:first-child{border-top:0; padding-top:0}
+  .step .num{
+    font-family:var(--mono); font-size:.72rem; font-weight:600; color:var(--amber);
+    padding-top:3px; letter-spacing:.06em;
+  }
+  .step h3{margin-bottom:2px}
+  .step p{font-size:.92rem}
+
+  /* ---------- 3 · beneficios ---------- */
+  .ben-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line);
+            border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-top:36px}
+  @media (max-width:880px){ .ben-grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:560px){ .ben-grid{grid-template-columns:1fr} }
+  .ben{background:var(--paper); padding:24px 22px; display:grid; gap:8px; align-content:start}
+  .ben .ico{width:34px; height:34px; color:var(--amber)}
+  .ben p{font-size:.9rem}
+  .ben .tag{font-family:var(--mono); font-size:.7rem; color:var(--muted); letter-spacing:.05em}
+
+  /* ---------- 4 · diagramas (banda oscura fija) ---------- */
+  .tech{background:#10131A; color:#B9C2D0; border-block:1px solid #262C38}
+  .tech h2,.tech h3{color:#F2F5F9}
+  .tech .lede{color:#9AA5B6}
+  .tech .eyebrow{color:var(--amber-bright)}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin:30px 0 8px}
+  .tab{
+    font-family:var(--mono); font-size:.78rem; font-weight:500; letter-spacing:.03em;
+    padding:8px 14px; border-radius:20px; border:1px solid #2E3543; background:transparent;
+    color:#9AA5B6; cursor:pointer; transition:.15s ease;
+  }
+  .tab:hover{border-color:#47506180; color:#E6EBF2}
+  .tab[aria-selected="true"]{background:var(--amber-bright); border-color:var(--amber-bright); color:#141821}
+  .grp{margin-top:26px}
+  .grp-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; padding-bottom:12px; border-bottom:1px solid #262C38}
+  .grp-head .c{font-family:var(--mono); font-size:.8rem; color:var(--amber-bright); font-weight:600}
+  .grp-head .hus{font-family:var(--mono); font-size:.74rem; color:#727D8F; margin-left:auto}
+  .dgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px; margin-top:18px}
+  .dcard{
+    background:#171B24; border:1px solid #262C38; border-radius:9px; overflow:hidden;
+    cursor:zoom-in; padding:0; text-align:left; font:inherit; color:inherit; transition:.15s ease;
+    display:grid; grid-template-rows:auto auto;
+  }
+  .dcard:hover{border-color:#3C4555; transform:translateY(-2px)}
+  .dcard .thumb{height:150px; overflow:hidden; background:#0D1016; border-bottom:1px solid #262C38}
+  .dcard .thumb img{width:100%; height:100%; object-fit:cover; object-position:top center}
+  .dcard .cap{padding:11px 13px 13px}
+  .dcard .cap .k{font-family:var(--mono); font-size:.68rem; color:var(--amber-bright); letter-spacing:.06em; display:block; margin-bottom:3px}
+  .dcard .cap .v{font-size:.84rem; color:#DCE2EB; line-height:1.4}
+  .tech-note{margin-top:30px; padding:16px 18px; border:1px solid #262C38; border-radius:9px;
+             background:#141822; font-size:.86rem; color:#8E99AB}
+  .tech-note a{color:var(--amber-bright)}
+
+  /* lightbox */
+  .lb{position:fixed; inset:0; z-index:90; background:rgba(9,11,16,.94); display:grid;
+      grid-template-rows:auto 1fr; padding:14px; gap:10px}
+  .lb-bar{display:flex; align-items:center; gap:14px; color:#C6CEDB; font-size:.85rem}
+  .lb-bar .k{font-family:var(--mono); font-size:.74rem; color:var(--amber-bright)}
+  .lb-close{margin-left:auto; background:transparent; border:1px solid #39414F; color:#C6CEDB;
+            border-radius:6px; padding:6px 13px; cursor:pointer; font:inherit; font-size:.82rem}
+  .lb-close:hover{border-color:#6A748A; color:#fff}
+  .lb-body{overflow:auto; display:grid; place-items:start center}
+  .lb-body img{max-width:100%; height:auto; border-radius:6px}
+
+  /* ---------- 5 · prueba social ---------- */
+  .proof-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:22px; margin-top:34px}
+  @media (max-width:860px){ .proof-grid{grid-template-columns:repeat(2,1fr)} }
+  .stat .n{font-family:var(--serif); font-size:clamp(2rem,4.2vw,2.9rem); font-weight:700;
+           color:var(--ink); line-height:1; font-variant-numeric:tabular-nums}
+  .stat .l{font-size:.85rem; color:var(--muted); margin-top:7px}
+  .ficha{
+    margin-top:38px; border:1px solid var(--line); border-radius:12px; background:var(--surface);
+    display:grid; grid-template-columns:repeat(4,1fr);
+  }
+  @media (max-width:860px){ .ficha{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:460px){ .ficha{grid-template-columns:1fr} }
+  .ficha > div{padding:18px 20px; border-left:1px solid var(--line-soft)}
+  .ficha > div:first-child{border-left:0}
+  @media (max-width:860px){ .ficha > div:nth-child(odd){border-left:0} }
+  .ficha dt{font-family:var(--mono); font-size:.7rem; letter-spacing:.09em; text-transform:uppercase; color:var(--muted)}
+  .ficha dd{margin:5px 0 0; font-size:.92rem; color:var(--ink); font-weight:500}
+
+  /* ---------- 6 · llamado a la acción ---------- */
+  .cta{background:var(--ink); border-radius:14px; padding:clamp(30px,5vw,54px);
+       display:grid; grid-template-columns:1.2fr auto; gap:26px; align-items:center}
+  @media (max-width:800px){ .cta{grid-template-columns:1fr} }
+  .cta h2{color:#F4F6F9}
+  .cta p{color:#A8B2C2; margin-top:12px; max-width:52ch}
+  .cta .btn-primary{background:var(--amber-bright); color:#141821}
+  .cta .btn-primary:hover{background:#FFC24E}
+  .cta .btn-ghost{background:transparent; border-color:#3A4354; color:#E4E9F0}
+  .cta .btn-ghost:hover{border-color:#77839A}
+
+  /* ---------- 7 · formulario ---------- */
+  .form-grid{display:grid; grid-template-columns:.85fr 1.15fr; gap:clamp(26px,5vw,60px); align-items:start}
+  @media (max-width:860px){ .form-grid{grid-template-columns:1fr} }
+  .fields{display:grid; grid-template-columns:1fr 1fr; gap:15px}
+  @media (max-width:560px){ .fields{grid-template-columns:1fr} }
+  .field{display:grid; gap:6px}
+  .field.full{grid-column:1/-1}
+  .field label{font-size:.82rem; font-weight:500; color:var(--ink)}
+  .field label .req{color:var(--amber)}
+  .field input,.field select,.field textarea{
+    font:inherit; font-size:.92rem; color:var(--ink); background:var(--surface);
+    border:1px solid var(--line); border-radius:7px; padding:10px 12px; width:100%;
+  }
+  .field textarea{resize:vertical; min-height:88px}
+  .field .err{font-size:.76rem; color:#C2410C; min-height:0}
+  :root:not([data-theme="light"]) .field .err{color:#F98A5A}
+  @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) .field .err{color:#C2410C} }
+  .form-foot{display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:20px}
+  .form-foot .fine{font-size:.78rem; color:var(--muted); max-width:38ch}
+  .sent{
+    border:1px solid var(--ok); border-radius:10px; padding:20px 22px; background:var(--surface);
+    display:grid; gap:7px;
+  }
+  .sent .h{font-family:var(--serif); font-size:1.15rem; font-weight:600; color:var(--ink)}
+  .sent p{font-size:.9rem}
+  .sent .again{background:none; border:0; padding:0; color:var(--amber); font:inherit;
+                font-size:.86rem; cursor:pointer; text-decoration:underline; justify-self:start}
+
+  /* ---------- 8 · faq ---------- */
+  .faq{margin-top:30px; border-top:1px solid var(--line)}
+  .faq details{border-bottom:1px solid var(--line)}
+  .faq summary{
+    list-style:none; cursor:pointer; padding:17px 34px 17px 0; position:relative;
+    font-family:var(--serif); font-size:1.02rem; font-weight:600; color:var(--ink);
+  }
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{
+    content:""; position:absolute; right:6px; top:50%; width:9px; height:9px;
+    border-right:2px solid var(--amber); border-bottom:2px solid var(--amber);
+    transform:translateY(-70%) rotate(45deg); transition:transform .18s ease;
+  }
+  .faq details[open] summary::after{transform:translateY(-30%) rotate(225deg)}
+  .faq .ans{padding:0 0 19px; font-size:.93rem; max-width:70ch}
+
+  /* ---------- 9 · footer ---------- */
+  .foot{background:var(--ink); color:#97A1B2; padding-block:48px 34px}
+  .foot h2,.foot .brand b{color:#F2F5F9}
+  .foot-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1.2fr; gap:30px}
+  @media (max-width:820px){ .foot-grid{grid-template-columns:1fr 1fr; gap:26px} }
+  @media (max-width:460px){ .foot-grid{grid-template-columns:1fr} }
+  .foot .brand{color:#F2F5F9; margin-bottom:12px}
+  .foot p{font-size:.86rem; max-width:34ch}
+  .foot h4{font-family:var(--mono); font-size:.7rem; letter-spacing:.11em; text-transform:uppercase;
+           color:#6C7688; margin:0 0 11px; font-weight:600}
+  .foot ul{list-style:none; margin:0; padding:0; display:grid; gap:7px; font-size:.87rem}
+  .foot a{text-decoration:none; color:#97A1B2}
+  .foot a:hover{color:var(--amber-bright)}
+  .foot-bar{margin-top:34px; padding-top:18px; border-top:1px solid #2A3140;
+            display:flex; flex-wrap:wrap; gap:10px; font-size:.79rem; color:#6C7688}
+  .foot-bar .sp{margin-left:auto}
+
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<!-- ============ 1 · ENCABEZADO ============ -->
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="#top">
+      <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="45" height="45" rx="11" fill="#F5A623"/>
+        <text x="24" y="34.5" text-anchor="middle" font-family="Georgia,serif" font-size="31" font-weight="bold" fill="#1F2430">P</text>
+      </svg>
+      <b>ZonaPark</b>
+    </a>
+    <nav class="navlinks" aria-label="Secciones">
+      <a href="#que-hacemos">Qué hacemos</a>
+      <a href="#beneficios">Beneficios</a>
+      <a href="#diagramas">Diagramas</a>
+      <a href="#faq">Preguntas</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<section class="wrap hero">
+  <div class="hero-grid">
+    <div>
+      <span class="eyebrow">Sistema de gestión de parqueaderos</span>
+      <h1>El cuaderno no <span class="hl">cuadra</span> la caja.</h1>
+      <p class="lede">ZonaPark reemplaza el cuaderno y el Excel por un solo sistema: registra la entrada, calcula el tiempo y el cobro sin sacar cuentas a mano, y te dice cuántos espacios tienes libres en este momento.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#contacto">Solicitar una demostración</a>
+        <a class="btn btn-ghost" href="#diagramas">Ver cómo funciona por dentro</a>
+      </div>
+    </div>
+
+    <div class="panel" aria-label="Ejemplo del panel de espacios">
+      <div class="panel-head">
+        <span class="t">Espacios libres</span>
+        <span class="n">14&nbsp;/&nbsp;40</span>
+      </div>
+      <div class="lot" aria-hidden="true">
+        <span class="cell busy"></span><span class="cell busy"></span><span class="cell"></span><span class="cell busy"></span>
+        <span class="cell busy"></span><span class="cell"></span><span class="cell busy"></span><span class="cell busy"></span>
+        <span class="cell"></span><span class="cell busy"></span><span class="cell busy"></span><span class="cell busy"></span>
+        <span class="cell busy"></span><span class="cell"></span><span class="cell"></span><span class="cell busy"></span>
+        <span class="cell busy"></span><span class="cell busy"></span><span class="cell now"></span><span class="cell"></span>
+        <span class="cell"></span><span class="cell busy"></span><span class="cell busy"></span><span class="cell busy"></span>
+        <span class="cell busy"></span><span class="cell"></span><span class="cell busy"></span><span class="cell"></span>
+        <span class="cell busy"></span><span class="cell busy"></span><span class="cell busy"></span><span class="cell"></span>
+        <span class="cell"></span><span class="cell busy"></span><span class="cell busy"></span><span class="cell busy"></span>
+        <span class="cell busy"></span><span class="cell"></span><span class="cell"></span><span class="cell busy"></span>
+      </div>
+      <div class="panel-rows">
+        <div class="prow"><span class="plate">ABC123</span> <span class="sp">A-19 · 8 h 12 min</span> <span class="amt">$16.400</span></div>
+        <div class="prow"><span class="plate">XYZ789</span> <span class="sp">B-04 · 1 h 35 min</span> <span class="amt">$3.200</span></div>
+        <div class="prow"><span class="plate">KLM456</span> <span class="sp">C-11 · 22 min</span> <span class="amt">$1.000</span></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--line-soft);border:1px solid var(--line)"></i>Libre</span>
+        <span><i style="background:var(--ink)"></i>Ocupado</span>
+        <span><i style="background:var(--amber-bright)"></i>Ingreso reciente</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 · PROPUESTA DE VALOR ============ -->
+<section class="band" id="que-hacemos">
+  <div class="wrap sec">
+    <div class="vp-grid">
+      <div>
+        <span class="eyebrow">Qué hacemos</span>
+        <h2 style="margin-top:12px">Un solo sistema para todo el ciclo del vehículo</h2>
+      </div>
+      <div class="vp-body">
+        <p class="lede">Hoy muchos parqueaderos pequeños y medianos anotan las entradas y salidas en un cuaderno o en una hoja de cálculo. Se pierde información, se calcula mal el tiempo, se cobra de menos y nadie sabe cuántos espacios quedan libres sin ir a contarlos.</p>
+        <div class="flow">
+          <div class="step">
+            <span class="num">01</span>
+            <div>
+              <h3>Entra el vehículo</h3>
+              <p>El empleado captura la placa, el tipo de vehículo y el espacio asignado. El sistema guarda la fecha y la hora, y congela la tarifa vigente en ese momento.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="num">02</span>
+            <div>
+              <h3>Permanece estacionado</h3>
+              <p>El tablero muestra los espacios libres y ocupados al instante. El cliente puede consultar desde su cuenta cuánto tiempo lleva.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="num">03</span>
+            <div>
+              <h3>Sale y se cobra solo</h3>
+              <p>El sistema calcula el tiempo transcurrido y el valor a cobrar en menos de dos segundos, guarda el registro y libera el espacio automáticamente.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="num">04</span>
+            <div>
+              <h3>Queda el registro</h3>
+              <p>Cada cobro queda asociado a su salida, con fecha, hora, tiempo total y valor. De ahí salen los reportes de ocupación e ingresos del administrador.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 · BENEFICIOS PRINCIPALES ============ -->
+<section class="wrap sec" id="beneficios">
+  <span class="eyebrow">Beneficios principales</span>
+  <h2 style="margin-top:12px; max-width:22ch">Lo que deja de pasar cuando el registro es del sistema</h2>
+
+  <div class="ben-grid">
+    <article class="ben">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
+      <h3>El tiempo se calcula solo</h3>
+      <p>Desde la hora de ingreso hasta la de salida, sin restar horas a mano ni redondear a ojo.</p>
+      <span class="tag">RF-04 · RNF-03</span>
+    </article>
+    <article class="ben">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h18M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M5 8l1 11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-11"/><path d="M12 12v5"/></svg>
+      <h3>Se cobra con la tarifa correcta</h3>
+      <p>Se aplica la tarifa que estaba vigente cuando el vehículo entró. Si el administrador la cambia hoy, no afecta a quien ya entró.</p>
+      <span class="tag">RF-05 · RF-06</span>
+    </article>
+    <article class="ben">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <h3>Los espacios libres, al momento</h3>
+      <p>Cuántos hay ocupados y cuántos disponibles, sin salir a contar puesto por puesto.</p>
+      <span class="tag">RF-07</span>
+    </article>
+    <article class="ben">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg>
+      <h3>Cada quien ve lo suyo</h3>
+      <p>Tres roles con permisos distintos. El cliente solo ve su historial; solo el administrador toca tarifas y reportes.</p>
+      <span class="tag">RF-01 · RF-02 · RNF-02</span>
+    </article>
+    <article class="ben">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3l7.5 3.4v5.1c0 4.4-3.1 8.4-7.5 9.5-4.4-1.1-7.5-5.1-7.5-9.5V6.4z"/><path d="M9.3 12.1l1.9 1.9 3.6-3.7"/></svg>
+      <h3>El acceso está protegido</h3>
+      <p>Contraseñas cifradas y un límite de intentos fallidos que bloquea los ataques de fuerza bruta contra el inicio de sesión.</p>
+      <span class="tag">RF-10 · RNF-01</span>
+    </article>
+    <article class="ben">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <h3>Reportes que cuadran</h3>
+      <p>Ocupación e ingresos del periodo, construidos sobre los movimientos que el propio sistema registró.</p>
+      <span class="tag">RF-08 · RF-09</span>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 4 · DIAGRAMAS ============ -->
+<section class="tech" id="diagramas">
+  <div class="wrap sec">
+    <span class="eyebrow">Documentación técnica</span>
+    <h2 style="margin-top:12px">Cómo funciona por dentro</h2>
+    <p class="lede" style="margin-top:14px">El sistema está documentado en cinco épicas y dieciséis historias de usuario. Cada épica tiene su diagrama de procesos en notación BPMN, su diagrama de actividades y sus diagramas de secuencia. Toca cualquiera para verlo completo.</p>
+
+    <div class="tabs" role="tablist" aria-label="Filtrar diagramas por épica">
+      <button class="tab" role="tab" aria-selected="true" data-f="all">Todas</button>
+      <button class="tab" role="tab" aria-selected="false" data-f="ep001">EP-001</button>
+      <button class="tab" role="tab" aria-selected="false" data-f="ep002">EP-002</button>
+      <button class="tab" role="tab" aria-selected="false" data-f="ep003">EP-003</button>
+      <button class="tab" role="tab" aria-selected="false" data-f="ep004">EP-004</button>
+      <button class="tab" role="tab" aria-selected="false" data-f="ep005">EP-005</button>
+      <button class="tab" role="tab" aria-selected="false" data-f="proc">Procesos (BPMN)</button>
+    </div>
+
+    <div id="grupos"></div>
+
+    <p class="tech-note">
+      Los diagramas de procesos están en un solo documento. <a href="assets/diagramas-procesos.pdf" target="_blank" rel="noopener">Abrir el PDF completo de procesos BPMN</a> · Diagramas elaborados por Adrián Petro, Mateo Vargas, Oscar Álvarez y Esteban Forero.
+    </p>
+  </div>
+</section>
+
+<!-- ============ 5 · PRUEBA SOCIAL ============ -->
+<section class="wrap sec" id="proyecto">
+  <span class="eyebrow">El proyecto</span>
+  <h2 style="margin-top:12px; max-width:24ch">Especificado antes de escribir la primera línea de código</h2>
+  <p class="lede" style="margin-top:14px">ZonaPark es un proyecto formativo en desarrollo, no un producto en venta. Lo que sí está terminado es la especificación: cada función del sistema nace de una necesidad documentada y termina en un escenario de prueba verificable.</p>
+
+  <div class="proof-grid">
+    <div class="stat"><div class="n">5</div><div class="l">Épicas documentadas</div></div>
+    <div class="stat"><div class="n">16</div><div class="l">Historias de usuario</div></div>
+    <div class="stat"><div class="n">25</div><div class="l">Diagramas de procesos, actividades y secuencias</div></div>
+    <div class="stat"><div class="n">17</div><div class="l">Requisitos funcionales y no funcionales</div></div>
+  </div>
+
+  <dl class="ficha">
+    <div><dt>Formación</dt><dd>Análisis y Desarrollo de Software</dd></div>
+    <div><dt>Centro</dt><dd>SENA · Manufactura Avanzada</dd></div>
+    <div><dt>Ficha</dt><dd class="code">3229207</dd></div>
+    <div><dt>Equipo</dt><dd>4 desarrolladores</dd></div>
+  </dl>
+</section>
+
+<!-- ============ 6 · LLAMADO A LA ACCIÓN ============ -->
+<section class="wrap" style="padding-bottom:clamp(20px,4vw,40px)">
+  <div class="cta">
+    <div>
+      <h2>¿Administra un parqueadero? Cuéntenos cómo lleva hoy el registro.</h2>
+      <p>Estamos buscando parqueaderos reales para validar ZonaPark antes de terminarlo. Si nos deja sus datos, le mostramos el sistema y ajustamos lo que haga falta según su operación.</p>
+    </div>
+    <div class="cta-row" style="margin:0">
+      <a class="btn btn-primary" href="#contacto">Quiero la demostración</a>
+      <a class="btn btn-ghost" href="#faq">Tengo preguntas</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 · FORMULARIO DE CONVERSIÓN ============ -->
+<section class="band" id="contacto">
+  <div class="wrap sec">
+    <div class="form-grid">
+      <div>
+        <span class="eyebrow">Solicitar demostración</span>
+        <h2 style="margin-top:12px">Déjenos sus datos</h2>
+        <p class="lede" style="margin-top:14px">Le escribimos para coordinar una demostración de veinte minutos, presencial o por videollamada. No cuesta nada y no compromete a nada.</p>
+      </div>
+
+      <div>
+        <form id="form" novalidate>
+          <div class="fields">
+            <div class="field">
+              <label for="nombre">Nombre completo <span class="req">*</span></label>
+              <input id="nombre" name="nombre" type="text" autocomplete="name" required>
+              <span class="err" id="e-nombre"></span>
+            </div>
+            <div class="field">
+              <label for="parqueadero">Nombre del parqueadero <span class="req">*</span></label>
+              <input id="parqueadero" name="parqueadero" type="text" required>
+              <span class="err" id="e-parqueadero"></span>
+            </div>
+            <div class="field">
+              <label for="correo">Correo electrónico <span class="req">*</span></label>
+              <input id="correo" name="correo" type="email" autocomplete="email" required>
+              <span class="err" id="e-correo"></span>
+            </div>
+            <div class="field">
+              <label for="telefono">Teléfono</label>
+              <input id="telefono" name="telefono" type="tel" autocomplete="tel" inputmode="tel">
+              <span class="err" id="e-telefono"></span>
+            </div>
+            <div class="field">
+              <label for="espacios">Cuántos espacios tiene</label>
+              <select id="espacios" name="espacios">
+                <option value="">Seleccione…</option>
+                <option>Menos de 20</option>
+                <option>Entre 20 y 50</option>
+                <option>Entre 51 y 100</option>
+                <option>Más de 100</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="registro">Cómo lleva hoy el registro</label>
+              <select id="registro" name="registro">
+                <option value="">Seleccione…</option>
+                <option>Cuaderno o planilla en papel</option>
+                <option>Hoja de cálculo</option>
+                <option>Otro sistema</option>
+                <option>No llevo registro</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="mensaje">Qué le gustaría resolver primero</label>
+              <textarea id="mensaje" name="mensaje" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-primary" type="submit">Enviar solicitud</button>
+            <span class="fine">Los datos se usan solo para contactarlo por esta demostración.</span>
+          </div>
+        </form>
+
+        <div class="sent" id="sent" hidden>
+          <div class="h">Solicitud registrada</div>
+          <p id="sent-msg">Gracias. Anotamos sus datos y le escribimos al correo que nos dejó para coordinar la demostración.</p>
+          <button class="again" id="again" type="button">Enviar otra solicitud</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 · FAQ ============ -->
+<section class="wrap sec" id="faq">
+  <span class="eyebrow">Preguntas frecuentes</span>
+  <h2 style="margin-top:12px">Lo que más nos preguntan</h2>
+
+  <div class="faq">
+    <details open>
+      <summary>Si subo la tarifa hoy, ¿qué pasa con un carro que entró ayer?</summary>
+      <div class="ans">Paga con la tarifa que estaba vigente cuando entró, no con la nueva. Cada tarifa se guarda con la fecha desde la que rige, y la anterior no se borra: queda asociada a los ingresos que la usaron. Así un cambio de tarifa nunca modifica un cobro que ya estaba en curso.</div>
+    </details>
+    <details>
+      <summary>¿Qué pasa si un tipo de vehículo no tiene tarifa configurada?</summary>
+      <div class="ans">El sistema no deja registrar la salida. Rechaza el cálculo y le avisa al empleado que falta configurar esa tarifa, en vez de cobrar un valor inventado o dejar el registro incompleto.</div>
+    </details>
+    <details>
+      <summary>¿Necesito instalar algo?</summary>
+      <div class="ans">No. Es una aplicación web: se abre desde el navegador del computador, la tableta o el celular. La interfaz se adapta al tamaño de la pantalla.</div>
+    </details>
+    <details>
+      <summary>¿Puede un empleado ver la información de otro parqueadero?</summary>
+      <div class="ans">No. Un empleado solo registra y consulta movimientos del parqueadero al que está vinculado. Y un cliente solo ve sus propios pagos y su propio tiempo estacionado, nunca los de otro cliente.</div>
+    </details>
+    <details>
+      <summary>¿Se puede reservar un espacio con anticipación?</summary>
+      <div class="ans">Todavía no. La reserva de espacios está en exploración y quedó deliberadamente fuera de esta primera versión, junto con la aplicación móvil nativa y los pagos reales en producción. Preferimos entregar algo pequeño y completo antes que algo grande a medias.</div>
+    </details>
+    <details>
+      <summary>¿Ya puedo usarlo en mi parqueadero?</summary>
+      <div class="ans">Aún no. ZonaPark está en desarrollo como proyecto formativo. Lo que sí puede hacer es dejarnos sus datos y participar en las pruebas: nos sirve para validar el sistema contra una operación real antes de terminarlo.</div>
+    </details>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ 9 · FOOTER ============ -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="#top">
+          <svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="45" height="45" rx="11" fill="#F5A623"/>
+            <text x="24" y="34.5" text-anchor="middle" font-family="Georgia,serif" font-size="31" font-weight="bold" fill="#1F2430">P</text>
+          </svg>
+          <b>ZonaPark</b>
+        </a>
+        <p>Sistema inteligente de gestión y administración de parqueaderos. Proyecto formativo del programa de Análisis y Desarrollo de Software.</p>
+      </div>
+      <div>
+        <h4>Secciones</h4>
+        <ul>
+          <li><a href="#que-hacemos">Qué hacemos</a></li>
+          <li><a href="#beneficios">Beneficios</a></li>
+          <li><a href="#diagramas">Diagramas</a></li>
+          <li><a href="#faq">Preguntas</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Documentación</h4>
+        <ul>
+          <li><a href="assets/diagramas-procesos.pdf" target="_blank" rel="noopener">Procesos BPMN</a></li>
+          <li><a href="#diagramas">Actividades</a></li>
+          <li><a href="#diagramas">Secuencias</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Equipo</h4>
+        <ul>
+          <li>Oscar Jairo Álvarez López</li>
+          <li>Esteban Forero Deossa</li>
+          <li>Mateo Vargas Martínez</li>
+          <li>Adrián A. Velázquez Petro</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span>© 2026 ZonaPark · Proyecto formativo ADSO</span>
+      <span class="sp">SENA · Centro de Manufactura Avanzada · Ficha 3229207</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---- catálogo de diagramas ---- */
+  var EPICAS = [
+    { id:"ep001", cod:"EP-001", nom:"Gestión de usuarios y accesos", hus:"HU-001 a HU-004",
+      items:[
+        {src:"assets/diagramas/act-ep001.jpeg",     k:"Actividades", v:"Registro, inicio de sesión y recuperación de contraseña"},
+        {src:"assets/diagramas/sec-ep001-1.jpeg",   k:"Secuencia",   v:"Inicio de sesión"},
+        {src:"assets/diagramas/sec-ep001-2.png",    k:"Secuencia",   v:"Registro de nuevo usuario"},
+        {src:"assets/diagramas/sec-ep001-3.png",    k:"Secuencia",   v:"Gestión de roles"},
+        {src:"assets/diagramas/sec-ep001-4.png",    k:"Secuencia",   v:"Recuperación de contraseña"}
+      ]},
+    { id:"ep002", cod:"EP-002", nom:"Control de ingresos y salida de vehículos", hus:"HU-005 a HU-007",
+      items:[
+        {src:"assets/diagramas/act-ep002.jpg",      k:"Actividades", v:"Registro de entrada, salida y consulta en tiempo real"},
+        {src:"assets/diagramas/sec-ep002-1.png",    k:"Secuencia",   v:"Registro de ingreso de vehículo"},
+        {src:"assets/diagramas/sec-ep002-2.png",    k:"Secuencia",   v:"Registro de salida y cobro"},
+        {src:"assets/diagramas/sec-ep002-3.png",    k:"Secuencia",   v:"Consulta de vehículos en tiempo real"}
+      ]},
+    { id:"ep003", cod:"EP-003", nom:"Gestión de espacios de parqueo", hus:"HU-008 a HU-010",
+      items:[
+        {src:"assets/diagramas/act-ep003.jpeg",       k:"Actividades", v:"Zonas, alta y baja de espacios"},
+        {src:"assets/diagramas/sec-ep003-hu008.png",  k:"Secuencia",   v:"HU-008 · Visualizar y asignar espacios"},
+        {src:"assets/diagramas/sec-ep003-hu009.png",  k:"Secuencia",   v:"HU-009 · Gestionar espacios"},
+        {src:"assets/diagramas/sec-ep003-hu010.png",  k:"Secuencia",   v:"HU-010 · Configurar zonas"}
+      ]},
+    { id:"ep004", cod:"EP-004", nom:"Facturación y pagos", hus:"HU-011 a HU-013",
+      items:[
+        {src:"assets/diagramas/act-ep004.jpeg",       k:"Actividades", v:"Cálculo del valor, registro de pago y recibo"},
+        {src:"assets/diagramas/sec-ep004-hu011.png",  k:"Secuencia",   v:"HU-011 · Cálculo del valor a pagar"},
+        {src:"assets/diagramas/sec-ep004-hu012.png",  k:"Secuencia",   v:"HU-012 · Registro del pago"},
+        {src:"assets/diagramas/sec-ep004-hu013.png",  k:"Secuencia",   v:"HU-013 · Emisión del recibo"}
+      ]},
+    { id:"ep005", cod:"EP-005", nom:"Reportes e historial", hus:"HU-014 a HU-016",
+      items:[
+        {src:"assets/diagramas/act-ep005.jpeg",       k:"Actividades", v:"Reportes de ocupación, historial y exportación"},
+        {src:"assets/diagramas/sec-ep005-1.png",      k:"Secuencia",   v:"HU-014 · Generar reporte de ocupación"},
+        {src:"assets/diagramas/sec-ep005-2.png",      k:"Secuencia",   v:"HU-015 · Consultar historial"},
+        {src:"assets/diagramas/sec-ep005-hu016.png",  k:"Secuencia",   v:"HU-016 · Exportar reporte"}
+      ]},
+    { id:"proc", cod:"BPMN", nom:"Diagramas de procesos", hus:"Las 5 épicas",
+      items:[
+        {src:"assets/diagramas/procesos-1.jpg", k:"Procesos", v:"EP-001 · Gestión de usuarios y accesos"},
+        {src:"assets/diagramas/procesos-2.jpg", k:"Procesos", v:"EP-002 · Control de ingresos y salida"},
+        {src:"assets/diagramas/procesos-3.jpg", k:"Procesos", v:"EP-003 · Gestión de espacios"},
+        {src:"assets/diagramas/procesos-4.jpg", k:"Procesos", v:"EP-004 y EP-005 · Facturación y reportes"}
+      ]}
+  ];
+
+  var cont = document.getElementById("grupos");
+  if (cont) {
+    EPICAS.forEach(function(ep){
+      var sec = document.createElement("div");
+      sec.className = "grp";
+      sec.dataset.ep = ep.id;
+
+      var head = document.createElement("div");
+      head.className = "grp-head";
+      head.innerHTML = '<span class="c">' + ep.cod + '</span>' +
+                       '<h3>' + ep.nom + '</h3>' +
+                       '<span class="hus">' + ep.hus + '</span>';
+      sec.appendChild(head);
+
+      var grid = document.createElement("div");
+      grid.className = "dgrid";
+      ep.items.forEach(function(it){
+        var b = document.createElement("button");
+        b.className = "dcard";
+        b.type = "button";
+        b.setAttribute("aria-label", "Ampliar: " + it.k + " — " + it.v);
+        b.dataset.src = it.src;
+        b.dataset.k = ep.cod + " · " + it.k;
+        b.dataset.v = it.v;
+        var img = new Image();
+        img.src = it.src; img.alt = it.k + ": " + it.v; img.loading = "lazy"; img.decoding = "async";
+        var th = document.createElement("div"); th.className = "thumb"; th.appendChild(img);
+        var cap = document.createElement("div"); cap.className = "cap";
+        cap.innerHTML = '<span class="k">' + it.k + '</span><span class="v"></span>';
+        cap.querySelector(".v").textContent = it.v;
+        b.appendChild(th); b.appendChild(cap);
+        grid.appendChild(b);
+      });
+      sec.appendChild(grid);
+      cont.appendChild(sec);
+    });
+  }
+
+  /* ---- filtro por épica ---- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var grupos = Array.prototype.slice.call(document.querySelectorAll(".grp"));
+  tabs.forEach(function(t){
+    t.addEventListener("click", function(){
+      tabs.forEach(function(x){ x.setAttribute("aria-selected", String(x === t)); });
+      var f = t.dataset.f;
+      grupos.forEach(function(g){ g.hidden = !(f === "all" || g.dataset.ep === f); });
+    });
+  });
+
+  /* ---- lightbox ---- */
+  var lb = null, ultimoFoco = null;
+  function abrir(src, k, v){
+    ultimoFoco = document.activeElement;
+    lb = document.createElement("div");
+    lb.className = "lb";
+    lb.setAttribute("role", "dialog");
+    lb.setAttribute("aria-modal", "true");
+    lb.setAttribute("aria-label", v);
+    var bar = document.createElement("div");
+    bar.className = "lb-bar";
+    var ks = document.createElement("span"); ks.className = "k"; ks.textContent = k;
+    var vs = document.createElement("span"); vs.textContent = v;
+    var cl = document.createElement("button"); cl.className = "lb-close"; cl.type = "button"; cl.textContent = "Cerrar ✕";
+    bar.appendChild(ks); bar.appendChild(vs); bar.appendChild(cl);
+    var body = document.createElement("div"); body.className = "lb-body";
+    var im = new Image(); im.src = src; im.alt = v; body.appendChild(im);
+    lb.appendChild(bar); lb.appendChild(body);
+    document.body.appendChild(lb);
+    cl.focus();
+    cl.addEventListener("click", cerrar);
+    lb.addEventListener("click", function(e){ if (e.target === lb || e.target === body) cerrar(); });
+  }
+  function cerrar(){
+    if (!lb) return;
+    lb.remove(); lb = null;
+    if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
+  }
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") cerrar(); });
+  document.addEventListener("click", function(e){
+    var c = e.target.closest ? e.target.closest(".dcard") : null;
+    if (c) abrir(c.dataset.src, c.dataset.k, c.dataset.v);
+  });
+
+  /* ---- formulario ----
+     Es una maqueta: valida en el navegador y muestra la confirmación.
+     Para que envíe de verdad desde GitHub Pages, conecta un servicio de
+     formularios (por ejemplo Formspree) poniendo su URL en ENDPOINT. */
+  var ENDPOINT = "";
+
+  var form = document.getElementById("form");
+  var sent = document.getElementById("sent");
+  var again = document.getElementById("again");
+
+  function error(id, msg){
+    var e = document.getElementById("e-" + id);
+    if (e) e.textContent = msg || "";
+    var f = document.getElementById(id);
+    if (f) f.setAttribute("aria-invalid", msg ? "true" : "false");
+  }
+
+  if (form) {
+    form.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      var ok = true, primero = null;
+
+      ["nombre","parqueadero","correo"].forEach(function(id){
+        var v = document.getElementById(id).value.trim();
+        if (!v){ error(id, "Este dato nos hace falta."); ok = false; primero = primero || id; }
+        else error(id, "");
+      });
+
+      var correo = document.getElementById("correo").value.trim();
+      if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)){
+        error("correo", "Revise el correo: parece que le falta algo.");
+        ok = false; primero = primero || "correo";
+      }
+
+      var tel = document.getElementById("telefono").value.trim();
+      if (tel && !/^[\d\s+()-]{7,}$/.test(tel)){
+        error("telefono", "Use solo números, espacios y los signos + ( ) -");
+        ok = false; primero = primero || "telefono";
+      } else error("telefono", "");
+
+      if (!ok){ var el = document.getElementById(primero); if (el) el.focus(); return; }
+
+      if (ENDPOINT) {
+        fetch(ENDPOINT, { method:"POST", body:new FormData(form), headers:{ Accept:"application/json" } })
+          .then(function(){ mostrarGracias(); })
+          .catch(function(){
+            document.getElementById("sent-msg").textContent =
+              "No pudimos enviar la solicitud en este momento. Inténtelo de nuevo en unos minutos o escríbanos directamente.";
+            mostrarGracias();
+          });
+      } else {
+        mostrarGracias();
+      }
+    });
+
+    function mostrarGracias(){
+      form.hidden = true;
+      sent.hidden = false;
+      sent.querySelector(".h").focus && sent.querySelector(".h").focus();
+      sent.scrollIntoView({ behavior:"smooth", block:"center" });
+    }
+
+    if (again) {
+      again.addEventListener("click", function(){
+        form.reset();
+        ["nombre","parqueadero","correo","telefono"].forEach(function(id){ error(id, ""); });
+        sent.hidden = true;
+        form.hidden = false;
+        document.getElementById("nombre").focus();
+      });
+    }
+  }
+})();
+</script>
